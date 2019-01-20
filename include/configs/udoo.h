@@ -21,6 +21,14 @@
 #define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		UART2_BASE
 
+//#undef CONFIG_CMD_SATA
+#undef CONFIG_SYS_LONGHELP
+#undef CONFIG_SYS_HUSH_PARSER
+#undef CONFIG_USB_OMAP3
+#undef CONFIG_MUSB_HCD
+#undef CONFIG_MUSB_UDC
+#undef CONFIG_CMD_NET
+
 /* SATA Configs */
 
 #ifdef CONFIG_CMD_SATA
@@ -44,35 +52,81 @@
 /* MMC Configuration */
 #define CONFIG_SYS_FSL_ESDHC_ADDR	0
 
+#ifdef CONFIG_BOOTDELAY
+#undef CONFIG_BOOTDELAY
+#define CONFIG_BOOTDELAY 0
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"console=ttymxc1,115200\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdtfile=undefined\0" \
 	"fdt_addr=0x18000000\0" \
 	"fdt_addr_r=0x18000000\0" \
 	"ip_dyn=yes\0" \
 	"mmcdev=0\0" \
 	"mmcrootfstype=ext4\0" \
-	"findfdt="\
-		"if test ${board_rev} = MX6Q; then " \
-			"setenv fdtfile imx6q-udoo.dtb; fi; " \
-		"if test ${board_rev} = MX6DL; then " \
-			"setenv fdtfile imx6dl-udoo.dtb; fi; " \
-		"if test ${fdtfile} = undefined; then " \
-			"echo WARNING: Could not determine dtb to use; fi\0" \
 	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"pxefile_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 	"ramdisk_addr_r=0x13000000\0" \
 	"scriptaddr=" __stringify(CONFIG_LOADADDR) "\0" \
-	BOOTENV
+	"image=zImage\0" \
+	"console=ttymxc1\0" \
+	"splashpos=m,m\0" \
+	"fdt_high=0xffffffff\0" \
+	"initrd_high=0xffffffff\0" \
+	"fdt_file=imx6q-udoo.dtb\0" \
+	"fdt_addr=0x18000000\0" \
+	"rdaddr=0x12A00000\0" \
+	"rdfile=initramfs-linux.img\0" \
+	"optargs=\0" \
+	"video=\0" \
+	"ip_dyn=yes\0" \
+	"mmcdev=0\0" \
+	"mmcpart=1\0" \
+	"bootcmd_mmc0=setenv devnum 0; run mmc_boot\0" \
+	"mmcargs=setenv bootargs console=${console},${baudrate} " \
+		"${optargs} " \
+		"quiet " \
+        "rootfstype=${mmcrootfstype} " \
+		"root=${root} " \
+		"video=${video}\0" \
+	"loadimage=echo Loading /${image}..; load mmc ${mmcdev}:${mmcpart} ${loadaddr} /${image}\0" \
+	"loadfdt=echo Loading /${fdt_file}..; load mmc ${mmcdev}:${mmcpart} ${fdt_addr} /${fdt_file}\0" \
+	"loadrd=load mmc ${bootpart} ${rdaddr} /${rdfile}\0" \
+	"mmcboot=mmc dev ${mmcdev}; " \
+		"if mmc rescan; then " \
+            "part list mmc 0;" \
+			"echo SD/MMC found on device ${mmcdev};" \
+			"setenv bootpart ${mmcdev}:1; " \
+			"part uuid mmc ${bootpart} uuid;" \
+			"setenv root PARTUUID=${uuid} ro rootwait;" \
+			"echo Checking for: ${bootdir}/uEnv.txt ...;" \
+			"if test -e mmc ${bootpart} ${bootdir}/uEnv.txt; then " \
+				"load mmc ${bootpart} ${loadaddr} ${bootdir}/uEnv.txt;" \
+				"env import -t ${loadaddr} ${filesize};" \
+				"echo Loaded environment from ${bootdir}/uEnv.txt;" \
+				"echo Checking if uenvcmd is set ...;" \
+				"if test -n ${uenvcmd}; then " \
+					"echo Running uenvcmd ...;" \
+					"run uenvcmd;" \
+				"fi;" \
+			"fi; " \
+			"if run loadimage; then " \
+				"if run loadfdt; then " \
+					"run mmcargs;" \
+                    "bootz ${loadaddr} - ${fdt_addr};" \
+				"else " \
+					"echo Kernel found, but no device tree found;" \
+				"fi;" \
+			"else " \
+				"echo No kernel found;" \
+			"fi;" \
+		"fi;\0"
 
-#define BOOT_TARGET_DEVICES(func) \
-	func(MMC, mmc, 0) \
-	func(SATA, sata, 0) \
-	func(DHCP, dhcp, na)
-
-#include <config_distro_bootcmd.h>
+#undef CONFIG_BOOTCOMMAND
+#define CONFIG_BOOTCOMMAND \
+	"run mmcboot; "
 
 /* Physical Memory Map */
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
