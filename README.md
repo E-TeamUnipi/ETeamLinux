@@ -1,4 +1,4 @@
-# ETeam Linux Distribution``
+# ETeam Linux Distribution
 
 This distro is used on UDOO Quad to control the car display. It's based on ARCH and use a custom kernel. The idea is to use the ATMEL SAM3X8E ARM processor to compute real time things(steering wheel control) and use the ARM i.MX6 NPX processor to show infos on display.
 The communication between the two processors is serial(UART):
@@ -35,15 +35,15 @@ mount /dev/mmcblk0p1 mnt
 ```
 6. download and extract latest ETeamLinux
 ```
-wget https://github.com/E-TeamUnipi/ETeamLinux/releases/download/v0.1/ETeamLinux.tar.gz
+wget https://github.com/E-TeamUnipi/ETeamLinux/releases/download/latest/ETeamLinux.tar.gz
 bsdtar -xpf ETeamLinux.tar.gz -C mnt
 sync
 umount mnt
 ```
 7. Install u-boot:
 ```
-wget http://os.archlinuxarm.org/os/imx6/boot/udoo/SPL
-wget http://os.archlinuxarm.org/os/imx6/boot/udoo/u-boot.img
+wget https://github.com/E-TeamUnipi/ETeamLinux/releases/download/latest/SPL
+wget https://github.com/E-TeamUnipi/ETeamLinux/releases/download/latest/u-boot.img
 dd if=SPL of=/dev/mmcblk0 seek=1 bs=1k
 dd if=u-boot.img of=/dev/mmcblk0 seek=69 bs=1k
 sync
@@ -52,15 +52,6 @@ sync
 9. Connect to serial console with a micro USB connector on CN6
     - login: alarm, password: alarm
     - root password: root
-
-## Set bootdelay to zero
-
-To set bootdelay to zero enter u-boot and run these commands
-```
-setenv bootdelay 0
-saveenv
-reset
-```
 
 ## Update the display
 
